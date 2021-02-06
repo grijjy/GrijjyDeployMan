@@ -1,4 +1,4 @@
-unit FMain;
+unit View.Main;
 
 {$WARN SYMBOL_PLATFORM OFF}
 {$WARN UNIT_PLATFORM OFF}
@@ -25,13 +25,13 @@ uses
   Vcl.ToolWin,
   Vcl.ActnList,
   Vcl.FileCtrl,
-  FConfigurations,
-  Common,
-  dprojFile,
-  grdeployFile;
+  View.Configurations,
+  Model.Common,
+  Model.DelphiProjectFile,
+  Model.GrijjyDeployFile;
 
 type
-  TFormMain = class(TForm)
+  TViewMain = class(TForm)
     MenuFile: TMenuItem;
     MenuImport: TMenuItem;
     OpenDialogDproj: TFileOpenDialog;
@@ -93,7 +93,7 @@ type
     FDeployFile: TDeployFile;
     FActivePlatform: TTargetPlatform;
     FLastDir: String;
-    FFormConfigurations: TFormConfigurations;
+    FViewConfigurations: TViewConfigurations;
     procedure Open(const AFilename: String);
     procedure Import(const ADProjFilename: String);
     function CheckSave: Boolean;
@@ -105,12 +105,12 @@ type
     procedure UpdateControls;
     procedure UpdateCaption;
     procedure ApplyDeployment(const ASrc: TDeployFile;
-      const ADst: TDprojFile); overload;
+      const ADst: TDelphiProjectFile); overload;
     procedure ApplyDeployment(const ASrcDir, ADstDir: String;
       const AEntry: TDeployEntry; const APlatform: TTargetPlatform;
-      const ADst: TDprojFile); overload;
+      const ADst: TDelphiProjectFile); overload;
     procedure SetModified(const AValue: Boolean);
-    procedure FormConfigurationsHide(Sender: TObject);
+    procedure ViewConfigurationsHide(Sender: TObject);
   private
     class function ConfigurationsToString(const AConfigs: TArray<String>): String; static;
   public
@@ -118,7 +118,7 @@ type
   end;
 
 var
-  FormMain: TFormMain;
+  ViewMain: TViewMain;
 
 implementation
 
@@ -136,7 +136,7 @@ const
 const
   YES_NO: array [Boolean] of String = ('No', 'Yes');
 
-procedure TFormMain.ActionAddFileExecute(Sender: TObject);
+procedure TViewMain.ActionAddFileExecute(Sender: TObject);
 var
   Entry: TDeployEntry;
   LocalName: String;
@@ -152,7 +152,7 @@ begin
   SetModified(True);
 end;
 
-procedure TFormMain.ActionAddFolderExecute(Sender: TObject);
+procedure TViewMain.ActionAddFolderExecute(Sender: TObject);
 var
   Dir: String;
   Entry: TDeployEntry;
@@ -168,7 +168,7 @@ begin
   SetModified(True);
 end;
 
-procedure TFormMain.ActionDeleteExecute(Sender: TObject);
+procedure TViewMain.ActionDeleteExecute(Sender: TObject);
 var
   I: Integer;
   Item: TListItem;
@@ -196,12 +196,12 @@ begin
   end;
 end;
 
-procedure TFormMain.ActionExitExecute(Sender: TObject);
+procedure TViewMain.ActionExitExecute(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TFormMain.ActionImportExecute(Sender: TObject);
+procedure TViewMain.ActionImportExecute(Sender: TObject);
 begin
   if (not CheckSave) then
     Exit;
@@ -210,7 +210,7 @@ begin
     Import(OpenDialogDproj.FileName);
 end;
 
-procedure TFormMain.ActionOpenExecute(Sender: TObject);
+procedure TViewMain.ActionOpenExecute(Sender: TObject);
 begin
   if (not CheckSave) then
     Exit;
@@ -219,14 +219,14 @@ begin
     Open(OpenDialogGrdeploy.FileName);
 end;
 
-procedure TFormMain.ActionSaveExecute(Sender: TObject);
+procedure TViewMain.ActionSaveExecute(Sender: TObject);
 begin
   Save;
 end;
 
-procedure TFormMain.ApplyDeployment(const ASrcDir, ADstDir: String;
+procedure TViewMain.ApplyDeployment(const ASrcDir, ADstDir: String;
   const AEntry: TDeployEntry; const APlatform: TTargetPlatform;
-  const ADst: TDprojFile);
+  const ADst: TDelphiProjectFile);
 var
   Filename, LocalName, RemoteDir: String;
   SR: TSearchRec;
@@ -252,8 +252,8 @@ begin
   end;
 end;
 
-procedure TFormMain.ApplyDeployment(const ASrc: TDeployFile;
-  const ADst: TDprojFile);
+procedure TViewMain.ApplyDeployment(const ASrc: TDeployFile;
+  const ADst: TDelphiProjectFile);
 var
   P: TTargetPlatform;
   Entry: TDeployEntry;
@@ -275,7 +275,7 @@ begin
   end;
 end;
 
-procedure TFormMain.ButtonConfigurationsClick(Sender: TObject);
+procedure TViewMain.ButtonConfigurationsClick(Sender: TObject);
 var
   Item: TListItem;
   Entry: TDeployEntry;
@@ -285,15 +285,15 @@ begin
   if (Item = nil) or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry)) then
     Exit;
 
-  FFormConfigurations.SetSelectedConfigurations(Entry.Configurations);
+  FViewConfigurations.SetSelectedConfigurations(Entry.Configurations);
 
   P := Point(0, ButtonConfigurations.Height);
   P := ButtonConfigurations.ClientToScreen(P);
-  FFormConfigurations.SetBounds(P.X, P.Y, FFormConfigurations.Width, FFormConfigurations.Height);
-  FFormConfigurations.Show;
+  FViewConfigurations.SetBounds(P.X, P.Y, FViewConfigurations.Width, FViewConfigurations.Height);
+  FViewConfigurations.Show;
 end;
 
-procedure TFormMain.CheckBoxSubDirsClick(Sender: TObject);
+procedure TViewMain.CheckBoxSubDirsClick(Sender: TObject);
 var
   Item: TListItem;
   Entry: TDeployEntry;
@@ -313,7 +313,7 @@ begin
   SetModified(True);
 end;
 
-function TFormMain.CheckSave: Boolean;
+function TViewMain.CheckSave: Boolean;
 begin
   if (not FModified) or (FDeployFile = nil) then
     Exit(True);
@@ -334,7 +334,7 @@ begin
   end;
 end;
 
-procedure TFormMain.ComboBoxTargetDirChange(Sender: TObject);
+procedure TViewMain.ComboBoxTargetDirChange(Sender: TObject);
 var
   Item: TListItem;
   Entry: TDeployEntry;
@@ -349,7 +349,7 @@ begin
   SetModified(True);
 end;
 
-class function TFormMain.ConfigurationsToString(
+class function TViewMain.ConfigurationsToString(
   const AConfigs: TArray<String>): String;
 var
   I: Integer;
@@ -364,39 +364,23 @@ begin
   Result := Result + ']';
 end;
 
-procedure TFormMain.FormActivate(Sender: TObject);
+procedure TViewMain.FormActivate(Sender: TObject);
 begin
-  if Assigned(FFormConfigurations) and (FFormConfigurations.Visible) then
-    FFormConfigurations.Hide;
+  if Assigned(FViewConfigurations) and (FViewConfigurations.Visible) then
+    FViewConfigurations.Hide;
 end;
 
-procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TViewMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := CheckSave;
 end;
 
-procedure TFormMain.FormConfigurationsHide(Sender: TObject);
-var
-  Item: TListItem;
-  Entry: TDeployEntry;
-begin
-  Item := ListViewEntries.Selected;
-  if (Item = nil) or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry)) then
-    Exit;
-
-  Entry.Configurations := FFormConfigurations.GetSelectedConfigurations;
-  FDeployFile.DeployEntries[FActivePlatform].AddOrSetValue(Item.Caption, Entry);
-
-  Item.SubItems[2] := ConfigurationsToString(Entry.Configurations);
-  SetModified(True);
-end;
-
-procedure TFormMain.FormCreate(Sender: TObject);
+procedure TViewMain.FormCreate(Sender: TObject);
 var
   Filename: String;
 begin
-  FFormConfigurations := TFormConfigurations.Create(Application);
-  FFormConfigurations.OnHide := FormConfigurationsHide;
+  FViewConfigurations := TViewConfigurations.Create(Application);
+  FViewConfigurations.OnHide := ViewConfigurationsHide;
 
   if (ParamCount > 0) then
   begin
@@ -410,19 +394,19 @@ begin
   UpdateControls;
 end;
 
-procedure TFormMain.FormDestroy(Sender: TObject);
+procedure TViewMain.FormDestroy(Sender: TObject);
 begin
   FDeployFile.Free;
 end;
 
-procedure TFormMain.Import(const ADProjFilename: String);
+procedure TViewMain.Import(const ADProjFilename: String);
 var
   P: TTargetPlatform;
-  Src: TDprojFile.TDeployFile;
+  Src: TDelphiProjectFile.TDeployFile;
   Dst: TDeployEntry;
-  DprojFile: TDprojFile;
+  DprojFile: TDelphiProjectFile;
 begin
-  DprojFile := TDprojFile.Create(ADProjFilename);
+  DprojFile := TDelphiProjectFile.Create(ADProjFilename);
   try
     DprojFile.Load;
 
@@ -448,7 +432,7 @@ begin
   SetModified(True);
 end;
 
-procedure TFormMain.ListViewEntriesClick(Sender: TObject);
+procedure TViewMain.ListViewEntriesClick(Sender: TObject);
 var
   Entry: TDeployEntry;
 begin
@@ -466,23 +450,33 @@ begin
   UpdateControls;
 end;
 
-procedure TFormMain.Open(const AFilename: String);
+procedure TViewMain.Open(const AFilename: String);
+var
+  DprojFile: TDelphiProjectFile;
 begin
   FreeAndNil(FDeployFile);
   FDeployFile := TDeployFile.Create(AFilename);
   FDeployFile.Load;
 
+  DprojFile := TDelphiProjectFile.Create(TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
+  try
+    DprojFile.Load;
+    FDeployFile.Configurations := DprojFile.Configurations;
+  finally
+    DprojFile.Free;
+  end;
+
   ShowSettings;
   SetModified(False);
 end;
 
-procedure TFormMain.Save;
+procedure TViewMain.Save;
 var
-  DprojFile: TDprojFile;
+  DprojFile: TDelphiProjectFile;
 begin
   if Assigned(FDeployFile) then
   begin
-    DprojFile := TDprojFile.Create(TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
+    DprojFile := TDelphiProjectFile.Create(TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
     try
       DprojFile.Load;
 
@@ -498,7 +492,7 @@ begin
   SetModified(False);
 end;
 
-procedure TFormMain.SetModified(const AValue: Boolean);
+procedure TViewMain.SetModified(const AValue: Boolean);
 begin
   if (AValue <> FModified) then
   begin
@@ -507,7 +501,7 @@ begin
   end;
 end;
 
-procedure TFormMain.ShowEntry(const AEntry: TDeployEntry;
+procedure TViewMain.ShowEntry(const AEntry: TDeployEntry;
   const AActivate: Boolean);
 var
   Item: TListItem;
@@ -536,7 +530,7 @@ begin
   end;
 end;
 
-procedure TFormMain.ShowSettings(const APlatform: TTargetPlatform);
+procedure TViewMain.ShowSettings(const APlatform: TTargetPlatform);
 var
   Entry: TDeployEntry;
 begin
@@ -573,17 +567,17 @@ begin
   UpdateControls;
 end;
 
-procedure TFormMain.ShowSettings;
+procedure TViewMain.ShowSettings;
 begin
   TabControl.TabIndex := 0;
-  FFormConfigurations.SetConfigurations(FDeployFile.Configurations);
+  FViewConfigurations.SetAllConfigurations(FDeployFile.Configurations);
   UpdateCaption;
   OpenDialogFile.DefaultFolder := FDeployFile.Directory;
   FLastDir := FDeployFile.Directory;
   ShowSettings(TTargetPlatform.iOS);
 end;
 
-procedure TFormMain.TabControlChange(Sender: TObject);
+procedure TViewMain.TabControlChange(Sender: TObject);
 begin
   if (TabControl.TabIndex = 0) then
     ShowSettings(TTargetPlatform.iOS)
@@ -591,7 +585,7 @@ begin
     ShowSettings(TTargetPlatform.Android);
 end;
 
-procedure TFormMain.UpdateCaption;
+procedure TViewMain.UpdateCaption;
 var
   S: String;
 begin
@@ -602,10 +596,10 @@ begin
 
   if Assigned(FDeployFile) then
     S := S + TPath.GetFileName(FDeployFile.Filename) + ' - ';
-  Caption := S + 'DeployMan';
+  Caption := S + 'Grijjy Deployment Manager';
 end;
 
-procedure TFormMain.UpdateControls;
+procedure TViewMain.UpdateControls;
 var
   B: Boolean;
 begin
@@ -617,6 +611,22 @@ begin
   ComboBoxTargetDir.Enabled := B;
   CheckBoxSubDirs.Enabled := B and (ListViewEntries.Selected.ImageIndex = II_FOLDER);
   ButtonConfigurations.Enabled := B;
+end;
+
+procedure TViewMain.ViewConfigurationsHide(Sender: TObject);
+var
+  Item: TListItem;
+  Entry: TDeployEntry;
+begin
+  Item := ListViewEntries.Selected;
+  if (Item = nil) or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry)) then
+    Exit;
+
+  Entry.Configurations := FViewConfigurations.GetSelectedConfigurations;
+  FDeployFile.DeployEntries[FActivePlatform].AddOrSetValue(Item.Caption, Entry);
+
+  Item.SubItems[2] := ConfigurationsToString(Entry.Configurations);
+  SetModified(True);
 end;
 
 end.

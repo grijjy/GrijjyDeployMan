@@ -1,4 +1,4 @@
-unit dprojFile;
+unit Model.DelphiProjectFile;
 
 interface
 
@@ -8,28 +8,38 @@ uses
     > git clone --recursive https://github.com/grijjy/GrijjyDeployMan }
   System.Generics.Collections,
   Neslib.Xml,
-  Common;
+  Model.Common;
 
 type
   { Reads/writes parts of Delphi .dproj files.
     NOTE: there are also .deployproj files. However, these are temporary files
     that Delphi recreates from the .dproj files. }
-  TDprojFile = class
+  TDelphiProjectFile = class
   public type
+    { Represents a single deployed file in a Delphi project file. }
     TDeployFile = record
+    {$REGION 'Internal Declarations'}
     private
       FLocalName: String;
       FRemoteDir: String;
       FRemoteName: String;
+    {$ENDREGION 'Internal Declarations'}
     public
       procedure Initialize;
 
+      { The name of the file (including directory) on the local file system. }
       property LocalName: String read FLocalName write FLocalName;
+
+      { The target directory (on the device) }
       property RemoteDir: String read FRemoteDir write FRemoteDir;
+
+      { The target filename (on the device) }
       property RemoteName: String read FRemoteName write FRemoteName;
     end;
 
+    { An array of deployed files per platform }
     TDeployFilesByPlatform = array [TTargetPlatform] of TDictionary<String, TDeployFile>;
+  {$REGION 'Internal Declarations'}
   private
     FFilename: String;
     FDocument: IXmlDocument;
@@ -49,19 +59,46 @@ type
   private
     class function MatchesConfiguration(const AConfig: String;
       const AConfigs: TArray<String>): Boolean; static;
+  {$ENDREGION 'Internal Declarations'}
   public
+    { Creates a Delphi project file wrapper.
+
+      Parameters:
+        AFilename: the name (including path) of the .dproj file.
+
+      This will load the file, without investigating it. To investigate the
+      file and extract the needed data, call Load.}
     constructor Create(const AFilename: String);
     destructor Destroy; override;
 
+    { Clears any extracted data (the Configurations and DeployFiles properties) }
     procedure Clear;
+
+    { Loads and extracts the Configurations and DeployFile properties from the
+      file. }
     procedure Load;
+
+    { Saves the project file, including any changes made by calling Clear and
+      Add. }
     procedure Save;
 
+    { Adds a file to be deployed.
+
+      Parameters:
+        ALocalName: the name (including directory) on the local file system of
+          the file to be deployed.
+        ARemoteDirectory: the target directory on the device to deploy to.
+        APlatform: the target platform for the file (iOS or Android)
+        AForConfigurations: the build configurations to add the file to.
+          Can be nil (empty) to apply to all configurations. }
     procedure Add(const ALocalName, ARemoteDir: String;
       const APlatform: TTargetPlatform;
       const AForConfigurations: TArray<String>);
 
+    { The build configurations found in the projectc file. }
     property Configurations: TArray<String> read FConfigurations;
+
+    { All deployed files per platform. }
     property DeployFiles: TDeployFilesByPlatform read FDeployFiles;
   end;
 
@@ -75,83 +112,78 @@ uses
 { Format of .dproj files, as far as needed for our purposes:
 
   <Project>
-  <ItemGroup>
-  <BuildConfiguration Include="Base">
-  <Key>Base</Key>
-  </BuildConfiguration>
-  <BuildConfiguration Include="Release">
-  <Key>Cfg_2</Key>
-  <CfgParent>Base</CfgParent>
-  </BuildConfiguration>
-  </ItemGroup>
-  <ProjectExtensions>
-  <BorlandProject>
-  <Deployment Version="3">
-  <DeployFile LocalName="Deploy\file1.txt" Configuration="Debug" Class="File">
-  <Platform Name="Android">
-  <RemoteDir>assets\internal\</RemoteDir>
-  <RemoteName>file1.txt</RemoteName>
-  <Overwrite>true</Overwrite>
-  </Platform>
-  <Platform Name="iOSDevice32">
-  <RemoteDir>.\testdir</RemoteDir>
-  <RemoteName>file1.txt</RemoteName>
-  <Overwrite>true</Overwrite>
-  </Platform>
-  </DeployFile>
-  </Deployment>
-  </BorlandProject>
-  </ProjectExtensions>
+    <ItemGroup>
+      <BuildConfiguration Include="Base">
+        <Key>Base</Key>
+      </BuildConfiguration>
+      <BuildConfiguration Include="Release">
+        <Key>Cfg_2</Key>
+        <CfgParent>Base</CfgParent>
+      </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+      <BorlandProject>
+        <Deployment Version="3">
+          <DeployFile LocalName="Deploy\file1.txt" Configuration="Debug" Class="File">
+            <Platform Name="Android">
+              <RemoteDir>assets\internal\</RemoteDir>
+              <RemoteName>file1.txt</RemoteName>
+              <Overwrite>true</Overwrite>
+            </Platform>
+            <Platform Name="iOSDevice32">
+              <RemoteDir>.\testdir</RemoteDir>
+              <RemoteName>file1.txt</RemoteName>
+              <Overwrite>true</Overwrite>
+            </Platform>
+          </DeployFile>
+        </Deployment>
+      </BorlandProject>
+    </ProjectExtensions>
   </Project>
 
   * Each build configuration (Debug, Release etc.) has a <BuildConfiguration>
-  entry. The "Base" configuration should be ignored.
+    entry. The "Base" configuration should be ignored.
   * <DeployFile> is used for all sorts of files, including the project binaries,
-  splash screens and resources. Custom files that you add manually always have
-  a Class of "File". All other classes are managed by Delphi and should be
-  ignored.
+    splash screens and resources. Custom files that you add manually always have
+    a Class of "File". All other classes are managed by Delphi and should be
+    ignored.
   * If <RemoteDir> is not given, it is set to '.\'
 
   Supported platforms:
-  * Win32
-  * Win64
   * iOSDevice32
   * iOSDevice64
   * iOSSimulator
   * Android
   * Android64 }
 
-{ TDprojFile.TDeployFile }
+{ TDelphiProjectFile.TDeployFile }
 
-procedure TDprojFile.TDeployFile.Initialize;
+procedure TDelphiProjectFile.TDeployFile.Initialize;
 begin
   FLocalName := '';
   FRemoteDir := '';
   FRemoteName := '';
 end;
 
-{ TDprojFile }
+{ TDelphiProjectFile }
 
-procedure TDprojFile.Add(const ALocalName, ARemoteDir: String;
+procedure TDelphiProjectFile.Add(const ALocalName, ARemoteDir: String;
   const APlatform: TTargetPlatform; const AForConfigurations: TArray<String>);
 const
   PLATFORM_NAMES: array [TTargetPlatform, 0..2] of String =
    (('', '', ''),                                   // Unknown
     ('iOSDevice32', 'iOSDevice64', 'iOSSimulator'), // iOS
     ('Android', 'Android64', ''));                  // Android
-var
-  DeployFile, Platf, Prop: TXmlNode;
-  Key, Config, PlatformName: String;
-  I: Integer;
 begin
   if (FDeploymentElement = nil) then
     Exit;
 
-  for Config in FConfigurations do
+  for var Config in FConfigurations do
   begin
     if MatchesConfiguration(Config, AForConfigurations) then
     begin
-      Key := ALocalName + '~' + Config;
+      var Key := ALocalName + '~' + Config;
+      var DeployFile: TXmlNode;
       if (not FDeployFileElements.TryGetValue(Key, DeployFile)) then
       begin
         DeployFile := FDeploymentElement.AddElement('DeployFile');
@@ -161,15 +193,16 @@ begin
         FDeployFileElements.Add(Key, DeployFile);
       end;
 
-      for I := 0 to 2 do
+      for var I := 0 to Length(PLATFORM_NAMES[APlatform]) - 1 do
       begin
-        PlatformName := PLATFORM_NAMES[APlatform, I];
+        var PlatformName := PLATFORM_NAMES[APlatform, I];
         if (PlatformName = '') then
           Break;
 
-        Platf := DeployFile.AddElement('Platform');
+        var Platf := DeployFile.AddElement('Platform');
         Platf.AddAttribute('Name', PlatformName);
 
+        var Prop: TXmlNode;
         if (ARemoteDir <> '') and (ARemoteDir <> '.\') then
         begin
           Prop := Platf.AddElement('RemoteDir');
@@ -186,24 +219,20 @@ begin
   end;
 end;
 
-procedure TDprojFile.Clear;
-var
-  P: TTargetPlatform;
+procedure TDelphiProjectFile.Clear;
 begin
   FDeployFileElements.Clear;
   FConfigurations := nil;
-  for P := Low(TTargetPlatform) to High(TTargetPlatform) do
+  for var P := Low(TTargetPlatform) to High(TTargetPlatform) do
     FDeployFiles[P].Clear;
 end;
 
-constructor TDprojFile.Create(const AFilename: String);
-var
-  P: TTargetPlatform;
+constructor TDelphiProjectFile.Create(const AFilename: String);
 begin
   inherited Create;
   FFilename := AFilename;
   FDeployFileElements := TDictionary<String, TXmlNode>.Create;
-  for P := Low(TTargetPlatform) to High(TTargetPlatform) do
+  for var P := Low(TTargetPlatform) to High(TTargetPlatform) do
     FDeployFiles[P] := TDictionary<String, TDeployFile>.Create;
   FDocument := TXmlDocument.Create;
   try
@@ -213,26 +242,21 @@ begin
   end;
 end;
 
-destructor TDprojFile.Destroy;
-var
-  P: TTargetPlatform;
+destructor TDelphiProjectFile.Destroy;
 begin
   FDeployFileElements.Free;
-  for P := Low(TTargetPlatform) to High(TTargetPlatform) do
+  for var P := Low(TTargetPlatform) to High(TTargetPlatform) do
     FDeployFiles[P].Free;
   inherited;
 end;
 
-procedure TDprojFile.Load;
-var
-  Root, Element: TXmlNode;
-  Name: String;
+procedure TDelphiProjectFile.Load;
 begin
   Clear;
-  Root := FDocument.DocumentElement;
-  for Element in Root do
+  var Root := FDocument.DocumentElement;
+  for var Element in Root do
   begin
-    Name := Element.Value;
+    var Name := Element.Value;
     if (Name = 'ItemGroup') then
       LoadItemGroup(Element)
     else if (Name = 'ProjectExtensions') then
@@ -240,157 +264,130 @@ begin
   end;
 end;
 
-procedure TDprojFile.LoadBorlandProject(const AElement: TXmlNode);
-var
-  Element: TXmlNode;
+procedure TDelphiProjectFile.LoadBorlandProject(const AElement: TXmlNode);
 begin
-  for Element in AElement do
+  for var Child in AElement do
   begin
-    if (Element.Value = 'Deployment') then
-      LoadDeployment(Element);
+    if (Child.Value = 'Deployment') then
+      LoadDeployment(Child);
   end;
 end;
 
-procedure TDprojFile.LoadBuildConfiguration(const AElement: TXmlNode);
-var
-  Attr: TXmlAttribute;
-  Name: String;
-  I: Integer;
+procedure TDelphiProjectFile.LoadBuildConfiguration(const AElement: TXmlNode);
 begin
-  Attr := AElement.AttributeByName('Include');
-  if (Attr = nil) then
-    Exit;
-
-  Name := Attr.Name;
+  var Name := AElement.AttributeByName('Include').Value;
   if (Name <> 'Base') then
   begin
-    for I := 0 to Length(FConfigurations) - 1 do
+    for var I := 0 to Length(FConfigurations) - 1 do
+    begin
       if (FConfigurations[I] = Name) then
         Exit;
+    end;
 
     FConfigurations := FConfigurations + [Name];
   end;
 end;
 
-function TDprojFile.LoadDeployFile(const AElement: TXmlNode): Boolean;
-var
-  Attr: TXmlAttribute;
-  Element: TXmlNode;
-  LocalName: String;
+function TDelphiProjectFile.LoadDeployFile(const AElement: TXmlNode): Boolean;
 begin
   Result := False;
-  Attr := AElement.AttributeByName('Class');
-  if (Attr.Name <> 'File') then
+  if (AElement.AttributeByName('Class').Value <> 'File') then
     Exit;
 
-  Attr := AElement.AttributeByName('LocalName');
-  LocalName := Attr.Name;
+  var LocalName := AElement.AttributeByName('LocalName').Value;
   if (LocalName = '') then
     Exit;
 
-  for Element in AElement do
+  for var Child in AElement do
   begin
-    if (Element.Value = 'Platform') then
-      LoadPlatform(LocalName, Element);
+    if (Child.Value = 'Platform') then
+      LoadPlatform(LocalName, Child);
   end;
 
   Result := True;
 end;
 
-procedure TDprojFile.LoadDeployment(const AElement: TXmlNode);
+procedure TDelphiProjectFile.LoadDeployment(const AElement: TXmlNode);
 var
-  Element: TXmlNode;
   ElementsToDelete: TArray<TXmlNode>;
-  I, Count: Integer;
 begin
   FDeploymentElement := AElement;
   SetLength(ElementsToDelete, 16);
-  Count := 0;
-  for Element in AElement do
+  var Count := 0;
+  for var Child in AElement do
   begin
-    if (Element.Value = 'DeployFile') then
+    if (Child.Value = 'DeployFile') then
     begin
-      if LoadDeployFile(Element) then
+      if LoadDeployFile(Child) then
       begin
         if (Count >= Length(ElementsToDelete)) then
           SetLength(ElementsToDelete, GrowCollection(Count, Count + 1));
 
-        ElementsToDelete[Count] := Element;
+        ElementsToDelete[Count] := Child;
         Inc(Count);
       end;
     end;
   end;
 
-  for I := 0 to Count - 1 do
+  for var I := 0 to Count - 1 do
     AElement.RemoveChild(ElementsToDelete[I]);
 end;
 
-procedure TDprojFile.LoadItemGroup(const AElement: TXmlNode);
-var
-  Element: TXmlNode;
+procedure TDelphiProjectFile.LoadItemGroup(const AElement: TXmlNode);
 begin
-  for Element in AElement do
+  for var Child in AElement do
   begin
-    if (Element.Value = 'BuildConfiguration') then
-      LoadBuildConfiguration(Element);
+    if (Child.Value = 'BuildConfiguration') then
+      LoadBuildConfiguration(Child);
   end;
 end;
 
-procedure TDprojFile.LoadPlatform(const ALocalName: String;
+procedure TDelphiProjectFile.LoadPlatform(const ALocalName: String;
   const AElement: TXmlNode);
-var
-  Name: String;
-  P: TTargetPlatform;
-  F: TDeployFile;
-  Attr: TXmlAttribute;
-  Element: TXmlNode;
 begin
-  Attr := AElement.AttributeByName('Name');
-  Name := Attr.Name;
+  var Platf: TTargetPlatform;
+  var Name := AElement.AttributeByName('Name').Value;
   if (Name = 'Android') then
-    P := TTargetPlatform.Android
+    Platf := TTargetPlatform.Android
   else if (Name = 'iOSDevice32') or (Name = 'iOSDevice64') or (Name = 'iOSSimulator') then
-    P := TTargetPlatform.iOS
+    Platf := TTargetPlatform.iOS
   else
     Exit;
 
-  if (FDeployFiles[P].ContainsKey(ALocalName)) then
+  if (FDeployFiles[Platf].ContainsKey(ALocalName)) then
     Exit;
 
-  F.Initialize;
-  F.LocalName := ALocalName;
+  var DeployFile: TDeployFile;
+  DeployFile.Initialize;
+  DeployFile.LocalName := ALocalName;
 
-  for Element in AElement do
+  for var Child in AElement do
   begin
-    if (Element.Value = 'RemoteName') then
-      F.RemoteName := Element.Text
-    else if (Element.Value = 'RemoteDir') then
-      F.RemoteDir := Element.Text
+    if (Child.Value = 'RemoteName') then
+      DeployFile.RemoteName := Child.Text
+    else if (Child.Value = 'RemoteDir') then
+      DeployFile.RemoteDir := Child.Text
   end;
 
-  FDeployFiles[P].Add(ALocalName, F);
+  FDeployFiles[Platf].Add(ALocalName, DeployFile);
 end;
 
-procedure TDprojFile.LoadProjectExtensions(const AElement: TXmlNode);
-var
-  Element: TXmlNode;
+procedure TDelphiProjectFile.LoadProjectExtensions(const AElement: TXmlNode);
 begin
-  for Element in AElement do
+  for var Child in AElement do
   begin
-    if (Element.Value = 'BorlandProject') then
-      LoadBorlandProject(Element);
+    if (Child.Value = 'BorlandProject') then
+      LoadBorlandProject(Child);
   end;
 end;
 
-class function TDprojFile.MatchesConfiguration(const AConfig: String;
+class function TDelphiProjectFile.MatchesConfiguration(const AConfig: String;
   const AConfigs: TArray<String>): Boolean;
-var
-  I: Integer;
 begin
   if (AConfigs = nil) then
     Exit(True);
 
-  for I := 0 to Length(AConfigs) - 1 do
+  for var I := 0 to Length(AConfigs) - 1 do
   begin
     if (AConfigs[I] = AConfig) then
       Exit(True);
@@ -399,13 +396,11 @@ begin
   Result := False;
 end;
 
-procedure TDprojFile.Save;
-var
-  BackupFilename: String;
+procedure TDelphiProjectFile.Save;
 begin
   ValidateDocument;
 
-  BackupFilename := FFilename + '.bak';
+  var BackupFilename := FFilename + '.bak';
   if (TFile.Exists(BackupFilename)) then
     TFile.Delete(BackupFilename);
 
@@ -415,9 +410,8 @@ begin
   FDocument.Save(FFilename, [TXmlOutputOption.Indent]);
 end;
 
-procedure TDprojFile.ValidateDocument;
+procedure TDelphiProjectFile.ValidateDocument;
 var
-  Root, Element: TXmlNode;
   ElementsToDelete: TArray<TXmlNode>;
 begin
   { Sanity check. A previous version of DeployMan could add empty
@@ -426,14 +420,14 @@ begin
 
     So we remove any empty <ProjectExtensions> elements }
   ElementsToDelete := nil;
-  Root := FDocument.DocumentElement;
-  for Element in Root do
+  var Root := FDocument.DocumentElement;
+  for var Element in Root do
   begin
     if (Element.Value = 'ProjectExtensions') and (Element.FirstChild = nil) then
       ElementsToDelete := ElementsToDelete + [Element];
   end;
 
-  for Element in ElementsToDelete do
+  for var Element in ElementsToDelete do
     Root.RemoveChild(Element);
 end;
 

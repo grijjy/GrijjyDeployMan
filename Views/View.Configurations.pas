@@ -1,4 +1,4 @@
-unit FConfigurations;
+unit View.Configurations;
 
 interface
 
@@ -8,7 +8,7 @@ uses
   Vcl.CheckLst, Vcl.ExtCtrls;
 
 type
-  TFormConfigurations = class(TForm)
+  TViewConfigurations = class(TForm)
     ListConfigurations: TCheckListBox;
     ToolBar: TToolBar;
     ToolButtonAll: TToolButton;
@@ -23,7 +23,7 @@ type
     { Private declarations }
   public
     { Public declarations }
-    procedure SetConfigurations(const AConfigurations: TArray<String>);
+    procedure SetAllConfigurations(const AConfigurations: TArray<String>);
     procedure SetSelectedConfigurations(const AConfigurations: TArray<String>);
     function GetSelectedConfigurations: TArray<String>;
   end;
@@ -32,9 +32,7 @@ implementation
 
 {$R *.dfm}
 
-{ TFormConfigurations }
-
-function TFormConfigurations.GetSelectedConfigurations: TArray<String>;
+function TViewConfigurations.GetSelectedConfigurations: TArray<String>;
 var
   I: Integer;
 begin
@@ -50,7 +48,7 @@ begin
     Result := nil;
 end;
 
-procedure TFormConfigurations.SetConfigurations(
+procedure TViewConfigurations.SetAllConfigurations(
   const AConfigurations: TArray<String>);
 var
   Config: String;
@@ -66,7 +64,7 @@ begin
   ClientHeight := ToolBar.Height + (Length(AConfigurations) * ListConfigurations.ItemHeight) + 2;
 end;
 
-procedure TFormConfigurations.SetSelectedConfigurations(
+procedure TViewConfigurations.SetSelectedConfigurations(
   const AConfigurations: TArray<String>);
 var
   Config: String;
@@ -87,17 +85,17 @@ begin
   end;
 end;
 
-procedure TFormConfigurations.ToolButtonAllClick(Sender: TObject);
+procedure TViewConfigurations.ToolButtonAllClick(Sender: TObject);
 begin
   ListConfigurations.CheckAll(TCheckBoxState.cbChecked);
 end;
 
-procedure TFormConfigurations.ToolButtonCloseClick(Sender: TObject);
+procedure TViewConfigurations.ToolButtonCloseClick(Sender: TObject);
 begin
   Hide;
 end;
 
-procedure TFormConfigurations.ToolButtonNoneClick(Sender: TObject);
+procedure TViewConfigurations.ToolButtonNoneClick(Sender: TObject);
 begin
   ListConfigurations.CheckAll(TCheckBoxState.cbUnchecked);
 end;

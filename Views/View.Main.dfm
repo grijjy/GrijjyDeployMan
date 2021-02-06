@@ -1,7 +1,7 @@
-object FormMain: TFormMain
+object ViewMain: TViewMain
   Left = 0
   Top = 0
-  Caption = 'DeployMan'
+  Caption = 'Grijjy Deployment Manager'
   ClientHeight = 624
   ClientWidth = 781
   Color = clBtnFace
@@ -76,10 +76,11 @@ object FormMain: TFormMain
         Left = 230
         Top = 0
         Width = 83
-        Height = 13
+        Height = 22
         Align = alLeft
         Caption = 'Target Directory:'
         Layout = tlCenter
+        ExplicitHeight = 13
       end
       object ToolBar: TToolBar
         Left = 0

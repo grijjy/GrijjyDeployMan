@@ -1,4 +1,4 @@
-object FormConfigurations: TFormConfigurations
+object ViewConfigurations: TViewConfigurations
   Left = 0
   Top = 0
   BorderIcons = []
@@ -26,7 +26,6 @@ object FormConfigurations: TFormConfigurations
     Ctl3D = False
     ParentCtl3D = False
     TabOrder = 0
-    ExplicitWidth = 174
     object ToolBar: TToolBar
       Left = 0
       Top = 0
@@ -39,8 +38,6 @@ object FormConfigurations: TFormConfigurations
       List = True
       ShowCaptions = True
       TabOrder = 0
-      ExplicitTop = -1
-      ExplicitWidth = 172
       object ToolButtonClose: TToolButton
         Left = 0
         Top = 0
