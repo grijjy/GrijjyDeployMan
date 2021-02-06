@@ -1,0 +1,6 @@
+[submodule "Neslib.Xml"]
+	path = Neslib.Xml
+	url = https://github.com/neslib/Neslib.Xml.git
+[submodule "GrijjyFoundation"]
+	path = GrijjyFoundation
+	url = https://github.com/grijjy/GrijjyFoundation.git
