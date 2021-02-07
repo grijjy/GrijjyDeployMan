@@ -33,11 +33,9 @@ implementation
 {$R *.dfm}
 
 function TViewConfigurations.GetSelectedConfigurations: TArray<String>;
-var
-  I: Integer;
 begin
   Result := nil;
-  for I := 0 to ListConfigurations.Items.Count - 1 do
+  for var I := 0 to ListConfigurations.Items.Count - 1 do
   begin
     if (ListConfigurations.Checked[I]) then
       Result := Result + [ListConfigurations.Items[I]];
@@ -50,13 +48,11 @@ end;
 
 procedure TViewConfigurations.SetAllConfigurations(
   const AConfigurations: TArray<String>);
-var
-  Config: String;
 begin
   ListConfigurations.Items.BeginUpdate;
   try
     ListConfigurations.Items.Clear;
-    for Config in AConfigurations do
+    for var Config in AConfigurations do
       ListConfigurations.Items.Add(Config);
   finally
     ListConfigurations.Items.EndUpdate;
@@ -66,9 +62,6 @@ end;
 
 procedure TViewConfigurations.SetSelectedConfigurations(
   const AConfigurations: TArray<String>);
-var
-  Config: String;
-  Index: Integer;
 begin
   if (AConfigurations = nil) then
   begin
@@ -77,9 +70,9 @@ begin
   end;
 
   ListConfigurations.CheckAll(TCheckBoxState.cbUnchecked);
-  for Config in AConfigurations do
+  for var Config in AConfigurations do
   begin
-    Index := ListConfigurations.Items.IndexOf(Config);
+    var Index := ListConfigurations.Items.IndexOf(Config);
     if (Index >= 0) then
       ListConfigurations.Checked[Index] := True;
   end;

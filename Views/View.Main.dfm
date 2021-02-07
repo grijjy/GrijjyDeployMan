@@ -76,11 +76,10 @@ object ViewMain: TViewMain
         Left = 230
         Top = 0
         Width = 83
-        Height = 22
+        Height = 13
         Align = alLeft
         Caption = 'Target Directory:'
         Layout = tlCenter
-        ExplicitHeight = 13
       end
       object ToolBar: TToolBar
         Left = 0

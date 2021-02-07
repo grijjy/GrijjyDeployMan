@@ -137,48 +137,38 @@ const
   YES_NO: array [Boolean] of String = ('No', 'Yes');
 
 procedure TViewMain.ActionAddFileExecute(Sender: TObject);
-var
-  Entry: TDeployEntry;
-  LocalName: String;
 begin
   if (not OpenDialogFile.Execute) then
     Exit;
 
   OpenDialogFile.DefaultFolder := '';
-  LocalName := OpenDialogFile.FileName;
+  var LocalName := OpenDialogFile.FileName;
   LocalName := ExtractRelativePath(FDeployFile.Directory, LocalName);
-  Entry := FDeployFile.Add(FActivePlatform, LocalName, '.\', False, False);
+  var Entry := FDeployFile.Add(FActivePlatform, LocalName, '.\', False, False);
   ShowEntry(Entry, True);
   SetModified(True);
 end;
 
 procedure TViewMain.ActionAddFolderExecute(Sender: TObject);
-var
-  Dir: String;
-  Entry: TDeployEntry;
 begin
-  Dir := FLastDir;
+  var Dir := FLastDir;
   if (not SelectDirectory('Select folder to add', '', Dir)) then
     Exit;
 
   FLastDir := Dir;
   Dir := ExtractRelativePath(FDeployFile.Directory, Dir);
-  Entry := FDeployFile.Add(FActivePlatform, Dir, '.\', True, False);
+  var Entry := FDeployFile.Add(FActivePlatform, Dir, '.\', True, False);
   ShowEntry(Entry, True);
   SetModified(True);
 end;
 
 procedure TViewMain.ActionDeleteExecute(Sender: TObject);
-var
-  I: Integer;
-  Item: TListItem;
-  Entry: TDeployEntry;
-  HasDeleted: Boolean;
 begin
-  HasDeleted := False;
-  for I := ListViewEntries.Items.Count - 1 downto 0 do
+  var Entry: TDeployEntry;
+  var HasDeleted := False;
+  for var I := ListViewEntries.Items.Count - 1 downto 0 do
   begin
-    Item := ListViewEntries.Items[I];
+    var Item := ListViewEntries.Items[I];
     if (Item.Selected) and FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry) then
     begin
       if (FDeployFile.Remove(Entry.LocalName, FActivePlatform)) then
@@ -227,21 +217,19 @@ end;
 procedure TViewMain.ApplyDeployment(const ASrcDir, ADstDir: String;
   const AEntry: TDeployEntry; const APlatform: TTargetPlatform;
   const ADst: TDelphiProjectFile);
-var
-  Filename, LocalName, RemoteDir: String;
-  SR: TSearchRec;
 begin
-  for Filename in TDirectory.GetFiles(ASrcDir) do
+  for var Filename in TDirectory.GetFiles(ASrcDir) do
   begin
-    LocalName := TPath.GetFileName(Filename);
+    var LocalName := TPath.GetFileName(Filename);
     LocalName := TPath.Combine(TPath.Combine(AEntry.LocalName, ADstDir), LocalName);
 
-    RemoteDir := TPath.Combine(AEntry.RemoteDir, ADstDir);
+    var RemoteDir := TPath.Combine(AEntry.RemoteDir, ADstDir);
     ADst.Add(LocalName, RemoteDir, APlatform, AEntry.Configurations);
   end;
 
   if (AEntry.IncludeSubDirectories) then
   begin
+    var SR: TSearchRec;
     if (FindFirst(IncludeTrailingPathDelimiter(ASrcDir) + '*.*', faDirectory, SR) = 0) then
     repeat
       if (SR.Name[1] <> '.') and ((SR.Attr and faDirectory) <> 0) then
@@ -254,19 +242,15 @@ end;
 
 procedure TViewMain.ApplyDeployment(const ASrc: TDeployFile;
   const ADst: TDelphiProjectFile);
-var
-  P: TTargetPlatform;
-  Entry: TDeployEntry;
-  FullDirectory: String;
 begin
-  for P := Low(TTargetPlatform) to High(TTargetPlatform) do
+  for var P := Low(TTargetPlatform) to High(TTargetPlatform) do
   begin
-    for Entry in ASrc.DeployEntries[P].Values do
+    for var Entry in ASrc.DeployEntries[P].Values do
     begin
       if (Entry.IsDirectory) then
       begin
         TDirectory.SetCurrentDirectory(FDeployFile.Directory);
-        FullDirectory := TPath.GetFullPath(Entry.LocalName);
+        var FullDirectory := TPath.GetFullPath(Entry.LocalName);
         ApplyDeployment(FullDirectory, '', Entry, P, ADst);
       end
       else
@@ -276,29 +260,24 @@ begin
 end;
 
 procedure TViewMain.ButtonConfigurationsClick(Sender: TObject);
-var
-  Item: TListItem;
-  Entry: TDeployEntry;
-  P: TPoint;
 begin
-  Item := ListViewEntries.Selected;
+  var Entry: TDeployEntry;
+  var Item := ListViewEntries.Selected;
   if (Item = nil) or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry)) then
     Exit;
 
   FViewConfigurations.SetSelectedConfigurations(Entry.Configurations);
 
-  P := Point(0, ButtonConfigurations.Height);
+  var P := Point(0, ButtonConfigurations.Height);
   P := ButtonConfigurations.ClientToScreen(P);
   FViewConfigurations.SetBounds(P.X, P.Y, FViewConfigurations.Width, FViewConfigurations.Height);
   FViewConfigurations.Show;
 end;
 
 procedure TViewMain.CheckBoxSubDirsClick(Sender: TObject);
-var
-  Item: TListItem;
-  Entry: TDeployEntry;
 begin
-  Item := ListViewEntries.Selected;
+  var Entry: TDeployEntry;
+  var Item := ListViewEntries.Selected;
   if (ListViewEntries.SelCount <> 1) or (Item = nil)
     or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry))
   then
@@ -335,11 +314,9 @@ begin
 end;
 
 procedure TViewMain.ComboBoxTargetDirChange(Sender: TObject);
-var
-  Item: TListItem;
-  Entry: TDeployEntry;
 begin
-  Item := ListViewEntries.Selected;
+  var Entry: TDeployEntry;
+  var Item := ListViewEntries.Selected;
   if (Item = nil) or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry)) then
     Exit;
 
@@ -351,14 +328,12 @@ end;
 
 class function TViewMain.ConfigurationsToString(
   const AConfigs: TArray<String>): String;
-var
-  I: Integer;
 begin
   if (AConfigs = nil) then
     Exit('(All)');
 
   Result := '[' + AConfigs[0];
-  for I := 1 to Length(AConfigs) - 1 do
+  for var I := 1 to Length(AConfigs) - 1 do
     Result := Result + ', ' + AConfigs[I];
 
   Result := Result + ']';
@@ -376,15 +351,13 @@ begin
 end;
 
 procedure TViewMain.FormCreate(Sender: TObject);
-var
-  Filename: String;
 begin
   FViewConfigurations := TViewConfigurations.Create(Application);
   FViewConfigurations.OnHide := ViewConfigurationsHide;
 
   if (ParamCount > 0) then
   begin
-    Filename := ParamStr(1);
+    var Filename := ParamStr(1);
     if TFile.Exists(Filename) then
     begin
       Open(Filename);
@@ -400,13 +373,8 @@ begin
 end;
 
 procedure TViewMain.Import(const ADProjFilename: String);
-var
-  P: TTargetPlatform;
-  Src: TDelphiProjectFile.TDeployFile;
-  Dst: TDeployEntry;
-  DprojFile: TDelphiProjectFile;
 begin
-  DprojFile := TDelphiProjectFile.Create(ADProjFilename);
+  var DprojFile := TDelphiProjectFile.Create(ADProjFilename);
   try
     DprojFile.Load;
 
@@ -414,10 +382,11 @@ begin
     FDeployFile := TDeployFile.Create(TPath.ChangeExtension(ADProjFilename, '.grdeploy'));
     FDeployFile.Configurations := DprojFile.Configurations;
 
-    for P := Low(TTargetPlatform) to High(TTargetPlatform) do
+    for var P := Low(TTargetPlatform) to High(TTargetPlatform) do
     begin
-      for Src in DprojFile.DeployFiles[P].Values do
+      for var Src in DprojFile.DeployFiles[P].Values do
       begin
+        var Dst: TDeployEntry;
         Dst.Initialize;
         Dst.LocalName := Src.LocalName;
         Dst.RemoteDir := Src.RemoteDir;
@@ -433,9 +402,8 @@ begin
 end;
 
 procedure TViewMain.ListViewEntriesClick(Sender: TObject);
-var
-  Entry: TDeployEntry;
 begin
+  var Entry: TDeployEntry;
   if (ListViewEntries.SelCount = 1) and Assigned(ListViewEntries.Selected)
     and (FDeployFile.DeployEntries[FActivePlatform].TryGetValue(ListViewEntries.Selected.Caption, Entry)) then
   begin
@@ -451,14 +419,13 @@ begin
 end;
 
 procedure TViewMain.Open(const AFilename: String);
-var
-  DprojFile: TDelphiProjectFile;
 begin
   FreeAndNil(FDeployFile);
   FDeployFile := TDeployFile.Create(AFilename);
   FDeployFile.Load;
 
-  DprojFile := TDelphiProjectFile.Create(TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
+  var DprojFile := TDelphiProjectFile.Create(
+    TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
   try
     DprojFile.Load;
     FDeployFile.Configurations := DprojFile.Configurations;
@@ -471,12 +438,11 @@ begin
 end;
 
 procedure TViewMain.Save;
-var
-  DprojFile: TDelphiProjectFile;
 begin
   if Assigned(FDeployFile) then
   begin
-    DprojFile := TDelphiProjectFile.Create(TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
+    var DprojFile := TDelphiProjectFile.Create(
+      TPath.ChangeExtension(FDeployFile.Filename, '.dproj'));
     try
       DprojFile.Load;
 
@@ -503,11 +469,8 @@ end;
 
 procedure TViewMain.ShowEntry(const AEntry: TDeployEntry;
   const AActivate: Boolean);
-var
-  Item: TListItem;
-  I: Integer;
 begin
-  Item := ListViewEntries.Items.Add;
+  var Item := ListViewEntries.Items.Add;
   if (AEntry.IsDirectory) then
     Item.ImageIndex := II_FOLDER
   else
@@ -524,15 +487,13 @@ begin
 
   if AActivate then
   begin
-    for I := 0 to ListViewEntries.Items.Count - 1 do
+    for var I := 0 to ListViewEntries.Items.Count - 1 do
       ListViewEntries.Items[I].Selected := (ListViewEntries.Items[I] = Item);
     ListViewEntriesClick(ListViewEntries);
   end;
 end;
 
 procedure TViewMain.ShowSettings(const APlatform: TTargetPlatform);
-var
-  Entry: TDeployEntry;
 begin
   FActivePlatform := APlatform;
   ComboBoxTargetDir.Items.BeginUpdate;
@@ -557,7 +518,7 @@ begin
     try
       ListViewEntries.Items.Clear;
 
-      for Entry in FDeployFile.DeployEntries[APlatform].Values do
+      for var Entry in FDeployFile.DeployEntries[APlatform].Values do
         ShowEntry(Entry, False);
     finally
       ListViewEntries.Items.EndUpdate;
@@ -586,13 +547,10 @@ begin
 end;
 
 procedure TViewMain.UpdateCaption;
-var
-  S: String;
 begin
+  var S := '';
   if (FModified) then
-    S := '*'
-  else
-    S := '';
+    S := '*';
 
   if Assigned(FDeployFile) then
     S := S + TPath.GetFileName(FDeployFile.Filename) + ' - ';
@@ -600,10 +558,8 @@ begin
 end;
 
 procedure TViewMain.UpdateControls;
-var
-  B: Boolean;
 begin
-  B := (ListViewEntries.Selected <> nil);
+  var B := (ListViewEntries.Selected <> nil);
   ActionDelete.Enabled := B;
 
   B := B and (ListViewEntries.SelCount = 1);
@@ -614,11 +570,9 @@ begin
 end;
 
 procedure TViewMain.ViewConfigurationsHide(Sender: TObject);
-var
-  Item: TListItem;
-  Entry: TDeployEntry;
 begin
-  Item := ListViewEntries.Selected;
+  var Entry: TDeployEntry;
+  var Item := ListViewEntries.Selected;
   if (Item = nil) or (not FDeployFile.DeployEntries[FActivePlatform].TryGetValue(Item.Caption, Entry)) then
     Exit;
 
