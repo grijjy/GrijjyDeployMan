@@ -130,11 +130,6 @@ uses
               <RemoteName>file1.txt</RemoteName>
               <Overwrite>true</Overwrite>
             </Platform>
-            <Platform Name="iOSDevice32">
-              <RemoteDir>.\testdir</RemoteDir>
-              <RemoteName>file1.txt</RemoteName>
-              <Overwrite>true</Overwrite>
-            </Platform>
           </DeployFile>
         </Deployment>
       </BorlandProject>
@@ -150,7 +145,6 @@ uses
   * If <RemoteDir> is not given, it is set to '.\'
 
   Supported platforms:
-  * iOSDevice32
   * iOSDevice64
   * iOSSimulator
   * Android
@@ -171,9 +165,9 @@ procedure TDelphiProjectFile.Add(const ALocalName, ARemoteDir: String;
   const APlatform: TTargetPlatform; const AForConfigurations: TArray<String>);
 const
   PLATFORM_NAMES: array [TTargetPlatform, 0..2] of String =
-   (('', '', ''),                                   // Unknown
-    ('iOSDevice32', 'iOSDevice64', 'iOSSimulator'), // iOS
-    ('Android', 'Android64', ''));                  // Android
+   (('', '', ''),                        // Unknown
+    ('iOSDevice64', 'iOSSimulator', ''), // iOS
+    ('Android', 'Android64', ''));       // Android
 begin
   if (FDeploymentElement = nil) then
     Exit;
@@ -349,7 +343,7 @@ begin
   var Name := AElement.AttributeByName('Name').Value;
   if (Name = 'Android') then
     Platf := TTargetPlatform.Android
-  else if (Name = 'iOSDevice32') or (Name = 'iOSDevice64') or (Name = 'iOSSimulator') then
+  else if (Name = 'iOSDevice64') or (Name = 'iOSSimulator') then
     Platf := TTargetPlatform.iOS
   else
     Exit;
