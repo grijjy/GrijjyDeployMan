@@ -88,7 +88,7 @@ type
         ALocalName: the name (including directory) on the local file system of
           the file to be deployed.
         ARemoteDirectory: the target directory on the device to deploy to.
-        APlatform: the target platform for the file (iOS or Android)
+        APlatform: the target platform for the file (iOS, Android or MacOS)
         AForConfigurations: the build configurations to add the file to.
           Can be nil (empty) to apply to all configurations. }
     procedure Add(const ALocalName, ARemoteDir: String;
@@ -148,7 +148,9 @@ uses
   * iOSDevice64
   * iOSSimulator
   * Android
-  * Android64 }
+  * Android64
+  * OSX64
+  * OSXARM64 }
 
 { TDelphiProjectFile.TDeployFile }
 
@@ -167,7 +169,8 @@ const
   PLATFORM_NAMES: array [TTargetPlatform, 0..2] of String =
    (('', '', ''),                        // Unknown
     ('iOSDevice64', 'iOSSimulator', ''), // iOS
-    ('Android', 'Android64', ''));       // Android
+    ('Android', 'Android64', ''),        // Android
+    ('OSX64', 'OSXARM64', ''));          // MacOS
 begin
   if (FDeploymentElement = nil) then
     Exit;
@@ -345,6 +348,8 @@ begin
     Platf := TTargetPlatform.Android
   else if (Name = 'iOSDevice64') or (Name = 'iOSSimulator') then
     Platf := TTargetPlatform.iOS
+  else if (Name = 'OSX64') or (Name = 'OSXARM64') then
+    Platf := TTargetPlatform.MacOS
   else
     Exit;
 

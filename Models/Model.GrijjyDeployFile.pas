@@ -52,6 +52,9 @@ type
 
     { All deployment entries for the Android platform }
     Android: TDeployEntries;
+
+    { All deployment entries for the MacOS platform }
+    MacOS: TDeployEntries;
   public
     procedure Initialize;
   end;
@@ -94,7 +97,7 @@ type
     { Adds a file or directory to be deployed.
 
       Parameters:
-        APlatform: the target platform (iOS or Android)
+        APlatform: the target platform (iOS, Android or MacOS)
         ALocalName: the name of the file or directory to deploy (on the local
           file system)
         ARemoteDir: the target directory on the device to deploy to.
@@ -113,7 +116,7 @@ type
       Parameters:
         ALocalName: the name of the file or directory to remove (on the local
           file system)
-        APlatform: the target platform (iOS or Android)
+        APlatform: the target platform (iOS, Android or MacOS)
 
       Returns:
         True if there was an entry for ALocalName, of False if not. }
@@ -156,6 +159,7 @@ begin
   Configurations := nil;
   iOS := nil;
   Android := nil;
+  MacOS := nil;
 end;
 
 { TDeployFile }
@@ -228,6 +232,7 @@ begin
   FConfigurations := Data.Configurations;
   AddEntries(TTargetPlatform.iOS, Data.iOS);
   AddEntries(TTargetPlatform.Android, Data.Android);
+  AddEntries(TTargetPlatform.MacOS, Data.MacOS);
 end;
 
 function TDeployFile.Remove(const ALocalName: String;
@@ -251,6 +256,7 @@ begin
   Data.Configurations := FConfigurations;
   Data.iOS := FDeployEntries[TTargetPlatform.iOS].Values.ToArray;
   Data.Android := FDeployEntries[TTargetPlatform.Android].Values.ToArray;
+  Data.MacOS := FDeployEntries[TTargetPlatform.MacOS].Values.ToArray;
 
   var Json: String;
   TgoBsonSerializer.Serialize(Data, TgoJsonWriterSettings.Pretty, Json);

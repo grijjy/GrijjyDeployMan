@@ -500,13 +500,16 @@ begin
   try
     ComboBoxTargetDir.Items.Clear;
     ComboBoxTargetDir.Items.Add('.\');
-    if (APlatform = TTargetPlatform.iOS) then
-      ComboBoxTargetDir.Items.Add('StartUp\Documents\')
+    case APlatform of
+      TTargetPlatform.iOS: ComboBoxTargetDir.Items.Add('StartUp\Documents\');
+      TTargetPlatform.Android:
+        begin
+          ComboBoxTargetDir.Items.Add('assets\internal');
+          ComboBoxTargetDir.Items.Add('assets\external');
+          ComboBoxTargetDir.Items.Add('res\values\');
+        end;
+      TTargetPlatform.MacOS: ComboBoxTargetDir.Items.Add('Contents\MacOS\');
     else
-    begin
-      ComboBoxTargetDir.Items.Add('assets\internal');
-      ComboBoxTargetDir.Items.Add('assets\external');
-      ComboBoxTargetDir.Items.Add('res\values\');
     end;
   finally
     ComboBoxTargetDir.Items.EndUpdate;
@@ -540,10 +543,12 @@ end;
 
 procedure TViewMain.TabControlChange(Sender: TObject);
 begin
-  if (TabControl.TabIndex = 0) then
-    ShowSettings(TTargetPlatform.iOS)
+  case TabControl.TabIndex of
+    0: ShowSettings(TTargetPlatform.iOS);
+    1: ShowSettings(TTargetPlatform.Android);
+    2: ShowSettings(TTargetPlatform.MacOS);
   else
-    ShowSettings(TTargetPlatform.Android);
+  end;
 end;
 
 procedure TViewMain.UpdateCaption;
