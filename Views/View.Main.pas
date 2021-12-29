@@ -508,7 +508,12 @@ begin
           ComboBoxTargetDir.Items.Add('assets\external');
           ComboBoxTargetDir.Items.Add('res\values\');
         end;
-      TTargetPlatform.MacOS: ComboBoxTargetDir.Items.Add('Contents\MacOS\');
+      TTargetPlatform.MacOS:
+        begin
+          ComboBoxTargetDir.Items.Add('Contents\MacOS\');
+          ComboBoxTargetDir.Items.Add('Contents\Resources\');
+          ComboBoxTargetDir.Items.Add('Contents\Resources\StartUp\');
+        end;
     else
     end;
   finally
