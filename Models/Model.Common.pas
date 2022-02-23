@@ -6,7 +6,7 @@ interface
 
 type
   { Supported target platforms }
-  TTargetPlatform = (Unknown, iOS, Android);
+  TTargetPlatform = (Unknown, iOS, Android, MacOS, Linux);
 
 implementation
 
