@@ -1,5 +1,5 @@
 # Grijjy Deployment Manager
-The Grijjy Deployment Manager (DeployMan) is a tool to simplify the deployment of files and folders for iOS and Android apps written in Delphi. It is especially useful if you need to deploy a lot of files, such as 3rd party SDKs.
+The Grijjy Deployment Manager (DeployMan) is a tool to simplify the deployment of files and folders for Android, iOS, MacOS and Linux apps written in Delphi. It is especially useful if you need to deploy a lot of files, such as 3rd party SDKs.
 
 ## Usage
 
@@ -33,6 +33,6 @@ Contributions are welcome! If you want to contribute, you can either create a pu
 
 ## License
 
-The Grijjy Deployment Manager is licensed under the Simplified BSD License. 
+The Grijjy Deployment Manager is licensed under the Simplified BSD License.
 
 See License.txt for details.

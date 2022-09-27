@@ -146,6 +146,7 @@ uses
 
   Supported platforms:
   * iOSDevice64
+  * iOSSimARM64
   * iOSSimulator
   * Android
   * Android64
@@ -168,11 +169,11 @@ procedure TDelphiProjectFile.Add(const ALocalName, ARemoteDir: String;
   const APlatform: TTargetPlatform; const AForConfigurations: TArray<String>);
 const
   PLATFORM_NAMES: array [TTargetPlatform, 0..2] of String =
-   (('', '', ''),                        // Unknown
-    ('iOSDevice64', 'iOSSimulator', ''), // iOS
-    ('Android', 'Android64', ''),        // Android
-    ('OSX64', 'OSXARM64', ''),           // MacOS
-    ('Linux64', '', ''));                // Linux
+   (('', '', ''),                                   // Unknown
+    ('iOSDevice64', 'iOSSimARM64', 'iOSSimulator'), // iOS
+    ('Android', 'Android64', ''),                   // Android
+    ('OSX64', 'OSXARM64', ''),                      // MacOS
+    ('Linux64', '', ''));                           // Linux
 begin
   if (FDeploymentElement = nil) then
     Exit;
@@ -348,7 +349,7 @@ begin
   var Name := AElement.AttributeByName('Name').Value;
   if (Name = 'Android') then
     Platf := TTargetPlatform.Android
-  else if (Name = 'iOSDevice64') or (Name = 'iOSSimulator') then
+  else if (Name = 'iOSDevice64') or (Name = 'iOSSimARM64') or (Name = 'iOSSimulator') then
     Platf := TTargetPlatform.iOS
   else if (Name = 'OSX64') or (Name = 'OSXARM64') then
     Platf := TTargetPlatform.MacOS

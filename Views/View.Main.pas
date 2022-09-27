@@ -501,7 +501,12 @@ begin
     ComboBoxTargetDir.Items.Clear;
     ComboBoxTargetDir.Items.Add('.\');
     case APlatform of
-      TTargetPlatform.iOS: ComboBoxTargetDir.Items.Add('StartUp\Documents\');
+      TTargetPlatform.iOS:
+        begin
+          ComboBoxTargetDir.Items.Add('StartUp\Documents\');
+          ComboBoxTargetDir.Items.Add('StartUp\Library\');
+          ComboBoxTargetDir.Items.Add('StartUp\Library\Caches\');
+        end;
       TTargetPlatform.Android:
         begin
           ComboBoxTargetDir.Items.Add('assets\internal');
