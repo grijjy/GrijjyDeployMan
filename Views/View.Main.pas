@@ -111,8 +111,12 @@ type
       const ADst: TDelphiProjectFile); overload;
     procedure SetModified(const AValue: Boolean);
     procedure ViewConfigurationsHide(Sender: TObject);
+    procedure WMDropFiles(var AMessage: TWMDropFiles); message WM_DROPFILES;
   private
     class function ConfigurationsToString(const AConfigs: TArray<String>): String; static;
+  protected
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
   public
     { Public declarations }
   end;
@@ -125,6 +129,7 @@ implementation
 {$R *.dfm}
 
 uses
+  Winapi.ShellAPI,
   System.Types,
   System.UITypes,
   System.IOUtils;
@@ -337,6 +342,18 @@ begin
     Result := Result + ', ' + AConfigs[I];
 
   Result := Result + ']';
+end;
+
+procedure TViewMain.CreateWnd;
+begin
+  inherited;
+  DragAcceptFiles(Handle, True);
+end;
+
+procedure TViewMain.DestroyWnd;
+begin
+  DragAcceptFiles(Handle, False);
+  inherited;
 end;
 
 procedure TViewMain.FormActivate(Sender: TObject);
@@ -598,6 +615,21 @@ begin
 
   Item.SubItems[2] := ConfigurationsToString(Entry.Configurations);
   SetModified(True);
+end;
+
+procedure TViewMain.WMDropFiles(var AMessage: TWMDropFiles);
+var
+  LCount: Integer;
+  LFileName: array[0..MAX_PATH - 1] of Char;
+begin
+  LCount := DragQueryFile(AMessage.Drop, $FFFFFFFF, LFileName, MAX_PATH);
+  if (LCount = 1) and (DragQueryFile(AMessage.Drop, 0, LFileName, MAX_PATH) <> 0) and
+    string(LFileName).EndsWith('.grdeploy', True) then
+  begin
+    if (not CheckSave) then
+      Exit;
+    Open(LFileName);
+  end;
 end;
 
 end.
