@@ -111,8 +111,12 @@ type
       const ADst: TDelphiProjectFile); overload;
     procedure SetModified(const AValue: Boolean);
     procedure ViewConfigurationsHide(Sender: TObject);
+    procedure WMDropFiles(var AMessage: TWMDropFiles); message WM_DROPFILES;
   private
     class function ConfigurationsToString(const AConfigs: TArray<String>): String; static;
+  protected
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
   public
     { Public declarations }
   end;
@@ -125,6 +129,7 @@ implementation
 {$R *.dfm}
 
 uses
+  Winapi.ShellAPI,
   System.Types,
   System.UITypes,
   System.IOUtils;
@@ -339,6 +344,18 @@ begin
   Result := Result + ']';
 end;
 
+procedure TViewMain.CreateWnd;
+begin
+  inherited;
+  DragAcceptFiles(Handle, True);
+end;
+
+procedure TViewMain.DestroyWnd;
+begin
+  DragAcceptFiles(Handle, False);
+  inherited;
+end;
+
 procedure TViewMain.FormActivate(Sender: TObject);
 begin
   if Assigned(FViewConfigurations) and (FViewConfigurations.Visible) then
@@ -500,13 +517,27 @@ begin
   try
     ComboBoxTargetDir.Items.Clear;
     ComboBoxTargetDir.Items.Add('.\');
-    if (APlatform = TTargetPlatform.iOS) then
-      ComboBoxTargetDir.Items.Add('StartUp\Documents\')
+    case APlatform of
+      TTargetPlatform.iOS:
+        begin
+          ComboBoxTargetDir.Items.Add('StartUp\Documents\');
+          ComboBoxTargetDir.Items.Add('StartUp\Library\');
+          ComboBoxTargetDir.Items.Add('StartUp\Library\Caches\');
+        end;
+      TTargetPlatform.Android:
+        begin
+          ComboBoxTargetDir.Items.Add('assets\internal');
+          ComboBoxTargetDir.Items.Add('assets\external');
+          ComboBoxTargetDir.Items.Add('res\values\');
+        end;
+      TTargetPlatform.MacOS:
+        begin
+          ComboBoxTargetDir.Items.Add('Contents\MacOS\');
+          ComboBoxTargetDir.Items.Add('Contents\Resources\');
+          ComboBoxTargetDir.Items.Add('Contents\Resources\StartUp\');
+        end;
+      TTargetPlatform.Linux: ComboBoxTargetDir.Items.Add('StartUp\');
     else
-    begin
-      ComboBoxTargetDir.Items.Add('assets\internal');
-      ComboBoxTargetDir.Items.Add('assets\external');
-      ComboBoxTargetDir.Items.Add('res\values\');
     end;
   finally
     ComboBoxTargetDir.Items.EndUpdate;
@@ -540,10 +571,13 @@ end;
 
 procedure TViewMain.TabControlChange(Sender: TObject);
 begin
-  if (TabControl.TabIndex = 0) then
-    ShowSettings(TTargetPlatform.iOS)
+  case TabControl.TabIndex of
+    0: ShowSettings(TTargetPlatform.iOS);
+    1: ShowSettings(TTargetPlatform.Android);
+    2: ShowSettings(TTargetPlatform.MacOS);
+    3: ShowSettings(TTargetPlatform.Linux);
   else
-    ShowSettings(TTargetPlatform.Android);
+  end;
 end;
 
 procedure TViewMain.UpdateCaption;
@@ -581,6 +615,21 @@ begin
 
   Item.SubItems[2] := ConfigurationsToString(Entry.Configurations);
   SetModified(True);
+end;
+
+procedure TViewMain.WMDropFiles(var AMessage: TWMDropFiles);
+var
+  LCount: Integer;
+  LFileName: array[0..MAX_PATH - 1] of Char;
+begin
+  LCount := DragQueryFile(AMessage.Drop, $FFFFFFFF, LFileName, MAX_PATH);
+  if (LCount = 1) and (DragQueryFile(AMessage.Drop, 0, LFileName, MAX_PATH) <> 0) and
+    string(LFileName).EndsWith('.grdeploy', True) then
+  begin
+    if (not CheckSave) then
+      Exit;
+    Open(LFileName);
+  end;
 end;
 
 end.

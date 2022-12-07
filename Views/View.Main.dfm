@@ -27,7 +27,9 @@ object ViewMain: TViewMain
     TabOrder = 0
     Tabs.Strings = (
       'iOS'
-      'Android')
+      'Android'
+      'MacOS'
+      'Linux')
     TabIndex = 0
     OnChange = TabControlChange
     object ListViewEntries: TListView
